@@ -40,7 +40,7 @@ const ubsubscribe = chan.subscribe(({ data, topic, subtopic }) => {
 })
 
 // Publish some data
-bus.publish('subtopic', context)
+chan.publish('subtopic', context)
 
 // Cleanup
 unsubsribe()
