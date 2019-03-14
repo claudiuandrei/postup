@@ -35,7 +35,7 @@ const chan = bus.channel('topic')
 const context = { test: true }
 
 // Setup a subscriber
-const ubsubscribe = chan.subscribe(({ data, topic, subtopic }) => {
+const ubsubscribe = chan.subscribe('subtopic', ({ data, topic, subtopic }) => {
   console.log({ data, topic, subtopic }) // { test: true } "@/topic/subtopic" "subtopic"
 })
 
