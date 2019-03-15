@@ -64,7 +64,7 @@ class Postup {
         const subtopic = topic.substring(base.length)
 
         // Push the data to the handler
-        handler({
+        return handler({
           data,
           topic,
           subtopic
