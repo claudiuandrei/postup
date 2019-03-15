@@ -11,7 +11,7 @@ type Data = any
 type Context = {
   data: Data
   topic: Topic
-  subtopic: Topic
+  subtopic?: Topic
 }
 
 // Unsubscriber
@@ -22,6 +22,9 @@ type Handler = (context: Context) => void
 
 // Base topic
 const BASE_TOPIC = '@'
+
+// Separator
+const SEPARATOR = '/'
 
 // A channel is just an interface into a subset of a dispatcher
 class Postup {
@@ -36,24 +39,29 @@ class Postup {
   }
 
   // Publish
-  publish(subtopic: Topic, data: Data): void {
+  publish(data: Data): void {
     this.bus.publish({
-      topic: `${this.topic}/${subtopic}`,
+      topic: this.topic,
       data
     })
   }
 
   // Subscribe
-  subscribe(subtopic: Topic, handler: Handler): Unsubscriber {
-    // Create the matching regex for this subscription
-    const regex: RegExp = new RegExp(`^${`${this.topic}/${subtopic}`}$`, 'i')
-
+  subscribe(handler: Handler): Unsubscriber {
     // Create a wrapper to test if matches
     const h: Handler = ({ topic, data }: Context): void => {
-      // Only notify handlers if the topic matches
-      if (regex.test(topic)) {
+      // If this is the topic
+      if (topic === this.topic) {
+        return handler({ topic, data })
+      }
+
+      // Get the base
+      const base = this.topic + SEPARATOR
+
+      // If this is a subtopic
+      if (topic.indexOf(base) === 0) {
         // Find the subtopic from the event main topic
-        const subtopic = topic.replace(new RegExp(`^${this.topic}/`, 'i'), '')
+        const subtopic = topic.substring(base.length)
 
         // Push the data to the handler
         handler({
@@ -75,7 +83,7 @@ class Postup {
 
   // Create a channel
   channel(subtopic: Topic) {
-    return new Postup({ bus: this.bus, topic: `${this.topic}/${subtopic}` })
+    return new Postup({ bus: this.bus, topic: this.topic + SEPARATOR + subtopic })
   }
 }
 
