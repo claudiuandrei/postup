@@ -11,29 +11,26 @@ type Data = any
 type Context = {
   data: Data
   topic: Topic
-  subtopic?: Topic
 }
 
 // Unsubscriber
 type Unsubscriber = () => void
 
 // Handler
-type Handler = (context: Context) => void
+type Handler = (data: Data, topic?: Topic) => void
 
-// Base topic
-const BASE_TOPIC = '@'
-
-// Separator
+// Constants
+const DEFAULT_TOPIC = '@'
 const SEPARATOR = '/'
 
 // A channel is just an interface into a subset of a dispatcher
 class Postup {
   // Properties
   private bus: Postbus
-  private topic?: Topic
+  private topic: Topic
 
   // Setup the properties
-  constructor({ bus = new Postbus(), topic = BASE_TOPIC }: { bus?: Postbus; topic?: Topic } = {}) {
+  constructor(topic: Topic = DEFAULT_TOPIC, bus: Postbus = new Postbus()) {
     this.bus = bus
     this.topic = topic
   }
@@ -41,18 +38,18 @@ class Postup {
   // Publish
   publish(data: Data): void {
     this.bus.publish({
-      topic: this.topic,
-      data
+      data,
+      topic: this.topic
     })
   }
 
   // Subscribe
   subscribe(handler: Handler): Unsubscriber {
     // Create a wrapper to test if matches
-    const h: Handler = ({ topic, data }: Context): void => {
+    const h = ({ data, topic }: Context): void => {
       // If this is the topic
       if (topic === this.topic) {
-        return handler({ topic, data })
+        return handler(data)
       }
 
       // Get the base
@@ -64,11 +61,7 @@ class Postup {
         const subtopic = topic.substring(base.length)
 
         // Push the data to the handler
-        return handler({
-          data,
-          topic,
-          subtopic
-        })
+        return handler(data, subtopic)
       }
     }
 
@@ -83,7 +76,7 @@ class Postup {
 
   // Create a channel
   channel(subtopic: Topic) {
-    return new Postup({ bus: this.bus, topic: this.topic + SEPARATOR + subtopic })
+    return new Postup(this.topic + SEPARATOR + subtopic, this.bus)
   }
 }
 

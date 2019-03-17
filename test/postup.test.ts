@@ -29,47 +29,36 @@ describe('Postup', () => {
     }
 
     // Subscribe and publish
-    chan.subscribe(({ data }) => {
+    chan.subscribe(data => {
       expect(data).toEqual(sent)
     })
     chan.publish(sent)
   })
 
   // Test event
-  test('Topic is passed correctly when matching', () => {
-    // Setup a channel
-    const chan = new Postup({ topic: 'topic' })
-
-    // Subscribe and publish
-    chan.subscribe(({ topic }) => {
-      expect(topic).toEqual('topic')
-    })
-    chan.publish({})
-  })
-
-  // Test event
-  test('Subtopic is passed correctly when matching', () => {
+  test('Topic is passed correctly when matching on different channels', () => {
     // Setup a channel
     const chan = new Postup()
-    const subchan = chan.channel('subtopic')
+    const subchan = chan.channel('topic')
 
     // Subscribe and publish
-    chan.subscribe(({ subtopic }) => {
-      expect(subtopic).toEqual('subtopic')
+    chan.subscribe((data, topic) => {
+      expect(topic).toEqual('topic')
     })
     subchan.publish({})
   })
 
   // Test event
-  test('Subtopic is undefined when not matching', () => {
+  test('Topic is undefined when matching on the same channel', () => {
     // Setup a channel
     const chan = new Postup()
+    const subchan = chan.channel('topic')
 
     // Subscribe and publish
-    chan.subscribe(({ subtopic }) => {
-      expect(subtopic).toBeUndefined()
+    subchan.subscribe((data, topic) => {
+      expect(topic).toBeUndefined()
     })
-    chan.publish({})
+    subchan.publish({})
   })
 
   // Test event
@@ -112,36 +101,41 @@ describe('Postup', () => {
     expect(onEvent).not.toHaveBeenCalled()
   })
 
-  // Test simple string
-  test('When matching pattern the subscription should be triggered', () => {
+  // Test event
+  test('Channels are the same if topics are the same', () => {
     // Setup a channel
-    const chan = new Postup().channel('channel')
+    const base = new Postup()
+    const chan1 = base.channel('topic')
+    const chan2 = base.channel('topic')
 
-    // On event trigger a jest fn
-    const onEvent = jest.fn()
+    const onEvent1 = jest.fn()
+    const onEvent2 = jest.fn()
 
     // Subscribe and publish
-    chan.subscribe(onEvent)
-    chan.publish({})
+    chan1.subscribe(onEvent1)
+    chan2.subscribe(onEvent2)
+    chan2.publish({})
 
-    // Test if the event function has been called
-    expect(onEvent).toHaveBeenCalled()
+    expect(onEvent1).toHaveBeenCalled()
+    expect(onEvent2).toHaveBeenCalled()
   })
 
-  // Test simple string
-  test('When matching pattern the dispatcher subscription should be triggered on channel dispatch', () => {
+  // Test event
+  test('Channels are not the same if topics are different', () => {
     // Setup a channel
-    const chan = new Postup()
-    const subchan = chan.channel('channel')
+    const base = new Postup()
+    const chan1 = base.channel('topic1')
+    const chan2 = base.channel('topic2')
 
-    // On event trigger a jest fn
-    const onEvent = jest.fn()
+    const onEvent1 = jest.fn()
+    const onEvent2 = jest.fn()
 
     // Subscribe and publish
-    chan.subscribe(onEvent)
-    subchan.publish({})
+    chan1.subscribe(onEvent1)
+    chan2.subscribe(onEvent2)
+    chan1.publish({})
 
-    // Test if the event function has been called
-    expect(onEvent).toHaveBeenCalled()
+    expect(onEvent1).toHaveBeenCalled()
+    expect(onEvent2).not.toHaveBeenCalled()
   })
 })
