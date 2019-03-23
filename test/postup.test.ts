@@ -39,11 +39,11 @@ describe('Postup', () => {
   test('Topic is passed correctly when matching on different channels', () => {
     // Setup a channel
     const chan = new Postup()
-    const subchan = chan.channel('topic')
+    const subchan = chan.channel(['topic'])
 
     // Subscribe and publish
     chan.subscribe((data, topic) => {
-      expect(topic).toEqual('topic')
+      expect(topic).toEqual(['topic'])
     })
     subchan.publish({})
   })
@@ -52,11 +52,11 @@ describe('Postup', () => {
   test('Topic is undefined when matching on the same channel', () => {
     // Setup a channel
     const chan = new Postup()
-    const subchan = chan.channel('topic')
+    const subchan = chan.channel(['topic'])
 
     // Subscribe and publish
     subchan.subscribe((data, topic) => {
-      expect(topic).toBeUndefined()
+      expect(topic).toEqual([])
     })
     subchan.publish({})
   })
@@ -105,8 +105,8 @@ describe('Postup', () => {
   test('Channels are the same if topics are the same', () => {
     // Setup a channel
     const base = new Postup()
-    const chan1 = base.channel('topic')
-    const chan2 = base.channel('topic')
+    const chan1 = base.channel(['topic'])
+    const chan2 = base.channel(['topic'])
 
     const onEvent1 = jest.fn()
     const onEvent2 = jest.fn()
@@ -124,8 +124,8 @@ describe('Postup', () => {
   test('Channels are not the same if topics are different', () => {
     // Setup a channel
     const base = new Postup()
-    const chan1 = base.channel('topic1')
-    const chan2 = base.channel('topic2')
+    const chan1 = base.channel(['topic1'])
+    const chan2 = base.channel(['topic2'])
 
     const onEvent1 = jest.fn()
     const onEvent2 = jest.fn()

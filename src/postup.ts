@@ -2,7 +2,7 @@
 import Postbus from 'postbus'
 
 // Setup the types
-type Topic = string
+type Topic = Array<string>
 
 // Data published
 type Data = any
@@ -17,11 +17,7 @@ type Context = {
 type Unsubscriber = () => void
 
 // Handler
-type Handler = (data: Data, topic?: Topic) => void
-
-// Constants
-const DEFAULT_TOPIC = '@'
-const SEPARATOR = '/'
+type Subscriber = (data: Data, topic: Topic) => void
 
 // A channel is just an interface into a subset of a dispatcher
 class Postup {
@@ -30,7 +26,7 @@ class Postup {
   private topic: Topic
 
   // Setup the properties
-  constructor(topic: Topic = DEFAULT_TOPIC, bus: Postbus = new Postbus()) {
+  constructor(bus: Postbus = new Postbus(), topic: Topic = []) {
     this.bus = bus
     this.topic = topic
   }
@@ -44,39 +40,26 @@ class Postup {
   }
 
   // Subscribe
-  subscribe(handler: Handler): Unsubscriber {
-    // Create a wrapper to test if matches
-    const h = ({ data, topic }: Context): void => {
-      // If this is the topic
-      if (topic === this.topic) {
-        return handler(data)
-      }
-
-      // Get the base
-      const base = this.topic + SEPARATOR
-
-      // If this is a subtopic
-      if (topic.indexOf(base) === 0) {
-        // Find the subtopic from the event main topic
-        const subtopic = topic.substring(base.length)
-
-        // Push the data to the handler
-        return handler(data, subtopic)
+  subscribe(subscriber: Subscriber): Unsubscriber {
+    // Create a handler out of the subscriber
+    const handler = ({ data, topic }: Context): void => {
+      if (this.topic.every((v, k) => v === topic[k])) {
+        return subscriber(data, topic.slice(this.topic.length))
       }
     }
 
     // Sunbscribe the handler
-    this.bus.subscribe(h)
+    this.bus.subscribe(handler)
 
     // Return an unsubscriber
     return () => {
-      this.bus.unsubscribe(h)
+      this.bus.unsubscribe(handler)
     }
   }
 
   // Create a channel
-  channel(subtopic: Topic) {
-    return new Postup(this.topic + SEPARATOR + subtopic, this.bus)
+  channel(topic: Topic) {
+    return new Postup(this.bus, [...this.topic, ...topic])
   }
 }
 
