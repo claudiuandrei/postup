@@ -29,14 +29,14 @@ import Postup from 'postup'
 ```javascript
 // Setup a new bus with no buffer
 const bus = new Postup()
-const chan = bus.channel('topic')
+const chan = bus.channel(['topic'])
 
 // Data published can be anything
 const context = { test: true }
 
 // Setup a subscriber
 const ubsubscribe = bus.subscribe((data, topic) => {
-  console.log(data, topic) // { test: true } "topic"
+  console.log(data, topic) // { test: true } ["topic"]
 })
 
 // Publish some data
